@@ -99,5 +99,6 @@ func main() {
 		log.Printf("Error: %v\n", err)
 	}
 
+	log.Println("Beginning monitoring")
 	tracker.Run(ctx)
 }

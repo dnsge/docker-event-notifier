@@ -73,6 +73,10 @@ func NewRestartTracker(window time.Duration, count int, violationLimit time.Dura
 	}
 
 	client.EventHandler = func(event events.Message) {
+		if event.Action != "restart" && event.Action != "start" {
+			return
+		}
+
 		actor := event.Actor
 		if _, exists := tracker.eventLogMap[actor.ID]; !exists {
 			tracker.eventLogMap[actor.ID] = NewEventTimeLog()
@@ -98,7 +102,6 @@ func NewRestartTracker(window time.Duration, count int, violationLimit time.Dura
 func (e *RestartTracker) Run(ctx context.Context) {
 	args := filters.NewArgs()
 	args.Add("type", "container")
-	args.Add("event", "restart")
 
 	e.client.runEventLoop(ctx, types.EventsOptions{
 		Filters: args,

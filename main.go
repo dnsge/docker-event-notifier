@@ -64,13 +64,13 @@ func signalWaiter(cancelFunc context.CancelFunc) {
 	signal.Notify(signals)
 	go func() {
 		sig := <-signals
-		fmt.Printf("Signal: %v\n", sig)
+		log.Printf("Signal: %v\n", sig)
 		cancelFunc()
 	}()
 }
 
 func formatEmailMessage(event events.Message) string {
-	header := "Subject: Container Restart Notification\r\n"
+	header := fmt.Sprintf("To: %s\r\nSubject: Container Restart Notification\r\n", config.ToAddress)
 	body := fmt.Sprintf("Container %q (%v) has restarted %d times in the past %v", event.Actor.Attributes["name"], event.Actor.ID, config.RestartCount, config.RestartDuration)
 	return header + "\r\n" + body
 }
@@ -87,12 +87,16 @@ func main() {
 	smtpAuth := smtp.PlainAuth("", config.FromAddress, config.Password, config.Host)
 
 	tracker.OnViolation = func(event events.Message, eventLog *eventTimeLog) {
-		fmt.Printf("Violation %v %v\n", event.Actor.ID, event.Actor.Attributes["name"])
+		log.Printf("Violation %v %v\n", event.Actor.ID, event.Actor.Attributes["name"])
 		msg := formatEmailMessage(event)
 		err := smtp.SendMail(config.Address(), smtpAuth, config.FromAddress, []string{config.ToAddress}, []byte(msg))
 		if err != nil {
 			log.Fatalf("failed to send email: %v", err)
 		}
+	}
+
+	tracker.OnError = func(err error) {
+		log.Printf("Error: %v\n", err)
 	}
 
 	tracker.Run(ctx)

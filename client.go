@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/events"
 	"github.com/docker/docker/client"
@@ -32,7 +31,6 @@ func NewEnvEventClient() (*EventClient, error) {
 func (cli *EventClient) runEventLoop(ctx context.Context, options types.EventsOptions) {
 	eventsChan, errChan := cli.Events(ctx, options)
 
-	fmt.Println("Beginning event loop")
 	for {
 		select {
 		case event := <-eventsChan:
